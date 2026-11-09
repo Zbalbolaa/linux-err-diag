@@ -1,0 +1,507 @@
+MKINITCPIO(8)                            mkinitcpio manual                            MKINITCPIO(8)
+
+NAME
+     mkinitcpio - Create an initial ramdisk environment
+
+SYNOPSIS
+     mkinitcpio [options]
+
+DESCRIPTION
+     Creates an initial ramdisk environment for booting the Linux kernel. The initial ramdisk is in
+     essence a very small environment (early userspace) which loads various kernel modules and sets
+     up  necessary  things before handing over control to init. This makes it possible to have, for
+     example, encrypted root file systems and root file systems on a software RAID array.  mkinitc‐
+     pio  allows for easy extension with custom hooks, has autodetection at runtime, and many other
+     features.
+
+OPTIONS
+     -A, --addhooks hooks
+         Add the additional hooks to the image. These will be processed in order  after  all  other
+         hooks  from  the config file. Multiple hooks should be comma-separated. This option can be
+         specified multiple times.
+
+     -c, --config config
+         Use config file to generate the  ramdisk.  Default:  /etc/mkinitcpio.conf.  If  specified,
+         drop-in files in /etc/mkinitcpio.conf.d will be ignored.
+
+     -d, --generatedir directory
+         Set directory as the location where the initramfs is built. This might be useful to gener‐
+         ate a shutdown ramfs in /run/initramfs/.
+
+     -D, --hookdir directory
+         Set directory as the location where hooks will be searched for when generating the image.
+
+     -I, --include path
+         Add  additional  files or directories to the image. These will be processed in order after
+         all other files have been included into the image.
+
+         If the path is a file, you can comma separate the source and the destination on the image.
+         Example: source:destination:mode.
+
+         If the path is a directory, it will only accept the full directory and include the  direc‐
+         tory from the root of the image.
+
+         Multiple paths should be comma-separated. This option can be specified multiple times.
+
+     -g, --generate filename
+         Generate  a CPIO image as filename. Default: no; this means nothing will be written to the
+         file system unless this option is specified.
+
+     -H, --hookhelp hookname
+         Output help for hookname hookname.
+
+     -h, --help
+         Output a short overview of available command-line switches.
+
+     -k, --kernel kernelversion
+         Use kernelversion, instead of the current running kernel. This may be a path to  a  kernel
+         image  (only supported for x86-based architectures), a specific kernel version or the spe‐
+         cial keyword none. In the latter case, no kernel modules are added to the image.
+
+     -L, --listhooks
+         List all available hooks.
+
+     -M, --automods
+         Display modules found via autodetection. mkinitcpio will automatically  try  to  determine
+         which  kernel  modules  are needed to start your computer. This option lists which modules
+         were detected.
+
+     -n, --nocolor
+         Disable color output.
+
+     --nopost
+         Do not run post hooks.
+
+     -U, --uki filename
+         Generate a unified kernel image as filename. If a CPIO image  is  successfully  built,  it
+         will  be  used  to  generate  a  unified  kernel image for UEFI booting. This combines the
+         initramfs, the kernel, and the kernel cmdline into one executable. This is useful for boot
+         chain integrity where the file is signed. Default: no. For a list of relevant options  see
+         Options for unified kernel image below.
+
+     -P, --allpresets
+         Process  all  presets  contained  in  /etc/mkinitcpio.d. See the -p option for more detail
+         about presets.
+
+     -p, --preset preset
+         Build  initramfs  image(s)  according  to  specified  preset.  This  may  be  a  file   in
+         /etc/mkinitcpio.d (without the .preset extension) or a full, absolute path to a file. This
+         option may be specified multiple times to process multiple presets.
+
+     -R, --remove
+         Remove  initramfs  image(s)  generated  by the specified preset(s). If used in combination
+         with -P|--allpresets, removes the images for all presets. This option  can  only  be  used
+         with either -p|--presets or -P|--allpresets.
+
+     -r, --moduleroot root
+         Specifies the root directory to find modules in, defaulting to /.
+
+     -S, --skiphooks hooks
+         Skip  hooks  when generating the image. Multiple hooks should be comma-separated. This op‐
+         tion can be specified multiple times.
+
+     -s, --save
+         Saves the build directory for the initial ramdisk. Default: no; This means  the  directory
+         will not be retained if this option is not specified. Useful for debugging purposes.
+
+     -t, --builddir tmpdir
+         Use tmpdir as the temporary build directory instead of /tmp. tmpdir must exist. The TMPDIR
+         environment  variable  is  also  honored to set this location, but the command line option
+         will take precedence.
+
+     -V, --version
+         Display version information.
+
+     -v, --verbose
+         Verbose output. Outputs more information about what is happening during  creation  of  the
+         ramdisk.
+
+     -z, --compress compress
+         Override the compression method with the compress program.
+
+OPTIONS FOR UNIFIED KERNEL IMAGE
+     --cmdline filename
+         Use  kernel  command  line  with  unified kernel image. If a directory is given, all files
+         matching *.conf in that directory are used. If none is specified, try  one  of  the  files
+         /etc/kernel/cmdline, /usr/lib/kernel/cmdline, /etc/cmdline.d/*.conf, /proc/cmdline.
+
+     --no-cmdline
+         Omit  embedding  a  kernel command line string in the unified kernel image. Kernel command
+         line options will need to be passed via the kernel command line. Overrides  the  --cmdline
+         option.
+
+     --splash filename
+         UEFI executables can show a bitmap file on boot.
+
+     --uefistub filename
+         UEFI  stub image used for unified kernel image generation. Has no effect if ukify is being
+         used. Default: Attempts to look for a systemd-boot or gummiboot stub loader.
+
+     --ukiconfig filename
+         Configuration file to pass to ukify. If none is specified, try one of the files  /etc/ker‐
+         nel/uki.conf or /usr/lib/kernel/uki.conf. If neither of those exists, ukify will  use  its
+         internal default.
+
+     --no-ukify
+         Do not use ukify to build UKIs even if it is available. This is not recommended.
+
+     --kernelimage filename
+         Include  a  kernel image for the unified kernel image. Default: one of /lib/modules/${KER‐
+         NELVERSION}/vmlinuz,   /lib/modules/${KERNELVERSION}/vmlinux,   /boot/vmlinuz-${KERNELVER‐
+         SION}, /boot/vmlinux-${KERNELVERSION}, /boot/vmlinuz-linux, or /boot/vmlinux-linux.
+
+     --osrelease filename
+         Include  a  os-release  file  for  the  unified  kernel image. Default: /etc/os-release or
+         /usr/lib/os-release.
+
+ABOUT PRESETS
+     A preset is a pre-defined definition on how to create an initial ramdisk. Instead of  specify‐
+     ing  the  configuration  file  and  which  output  file, every time you generate a new initial
+     ramdisk, you define a preset and use the -p switch to generate an initial ramdisk according to
+     your preset.
+
+     Typically, presets are files located in /etc/mkinitcpio.d with  the  extension  .preset,  e.g.
+     /etc/mkinitcpio.d/linux.preset  for the linux preset. It is possible to use files in other lo‐
+     cations, too. Then the path to this file needs to be specified.
+
+     Presets files are shell scripts that get sourced by mkinitcpio  and  the  following  variables
+     will influence its behavior.
+
+     Note,  that mkinitcpio calls itself for each preset and passes the options defined in the pre‐
+     set file file via command line arguments. Those are mentioned in the description  of  the  op‐
+     tions below, so refer to the manual of the command line arguments for more information about a
+     particular option.
+
+     PRESETS
+         An array of preset names defined in this file. These names will be used as prefix to other
+         options  to provide preset-specific options. For example, if a PRESET=('custom') is given,
+         then the image is specified via custom_image='/boot/custom.img'.
+
+     <preset>_kver (defaults to value of ALL_kver —— one of the two is required)
+         Specify the Kernel version (via -k in mkinitcpio).
+
+     <preset>_config (defaults to value of ALL_config —— one of the two is required)
+         Path to the configuration file (passed via -c to mkinitcpio).
+
+     <preset>_uki (one of <preset>_uki and <preset>_image is required)
+         Output file path for a unified kernel image (passed via -U to mkinitcpio).
+
+     <preset>_image (one of <preset>_uki and <preset>_image is required)
+         Output file path for the generated image (passed via -g to mkinitcpio).
+
+     <preset>_cmdline (defaults to value of ALL_cmdline)
+         Path to the kernel command line file (passed via --cmdline to mkinitcpio). This option  is
+         only used when generating unified kernel images.
+
+     <preset>_splash (defaults to value of ALL_splash)
+         Path  to  the  splash  image file (passed via --splash to mkinitcpio). This option is only
+         used when generating unified kernel images.
+
+     <preset>_kerneldest (defaults to value of ALL_kerneldest)
+         Kernel destination path that will be passed to post hooks. This overrides the default ker‐
+         nel location (usually /boot) and allows customization of where the kernel  should  be  lo‐
+         cated for booting. The value is passed to post hooks via the KERNELDESTINATION environment
+         variable.
+
+     <preset>_options
+         Further  command  line arguments to pass to mkinitcpio as a string or array. They will get
+         appended at the end of the call to mkinitcpio (after all the options mentioned above),  so
+         this can be used to overwrite options (for example pass a -S hook here to skip a hook).
+
+ABOUT INSTALL HOOKS
+     Install  hooks  are  bash  scripts which are sourced during mkinitcpio runtime in order to add
+     modules, binaries, and other files to the image. A variety of functions  exist  to  facilitate
+     this.
+
+     add_module modname
+         Adds  the module specified by modname to the image. Dependencies are derived and added au‐
+         tomatically.
+
+     add_binary binary [ destination ] [ mode ]
+         Adds a binary to the image. The argument binary need not  be  an  absolute  path  and,  if
+         needed,  a lookup will be performed. If the binary is a dynamically linked ELF binary, de‐
+         pendencies will be automatically added. If it is a symlink, both the symlink and the  tar‐
+         get  binary will be added. Optionally, a destination within the initramfs image as well as
+         a file mode can be specified. By default, the destination  and  mode  be  taken  from  the
+         source derived from binary.
+
+     add_file path [ destination ] [ mode ]
+         Adds  a  file and any needed parent directories to the image. If it is a symlink, both the
+         symlink and the target file will be added. Optionally, a destination within the  initramfs
+         image  as  well as a file mode can be specified. By default, the destination and mode will
+         be taken from the source and mode of the file specified by the path.
+
+     add_file_early path [ destination ] [ mode ]
+         Adds a file and any needed parent directories to the early uncompressed image.  Works  the
+         same way as add_file.
+
+     add_dir path
+         Adds a directory and its parents to the image.
+
+     add_dir_early path
+         Adds  a  directory  and its parents to the early uncompressed image. Works the same way as
+         add_dir.
+
+     add_full_dir directory [ glob ] [ strip_prefix ]
+         Recursively adds a directory to the image by walking the given path and calling  add_file,
+         add_dir,  and add_symlink accordingly. This function will not follow symlinks, nor will it
+         add the targets of symlinks.
+
+         If the glob argument is passed, only files and symlinks matching this glob will be added.
+
+         If the strip_prefix argument is passed, it will be used  to  strip  the  destination  path
+         (path in the initramfs image) from the prefix specified by the strip_prefix argument. This
+         can be useful when writing rootfs-overlay hooks.
+
+     add_symlink path [ link-target ]
+         Adds  a  symlink  to the image at the specified path, optionally pointing to the specified
+         link-target. If the link-target is not provided, it is assumed that this symlink exists in
+         the real file system, and the target will be read using readlink(1). There is no  checking
+         done  to  ensure  that the target of the symlink exists, and symlinks will not be followed
+         recursively.
+
+     add_all_modules [ -f filter ] pattern
+         Adds modules to the image, without regard for the autodetect whitelist. pattern should  be
+         a  subdirectory within the kernel tree describing a subset of modules to be included. Fur‐
+         ther refinement can be provided via the -f flag with an extended regular expression.
+
+     add_checked_modules [ -f filter ] pattern
+         Similar to add_all_modules with the constraint that only modules  matching  the  whitelist
+         generated by the autodetect hook will be added to the image. If the autodetect hook is not
+         present in the image, this function is identical to add_all_modules.
+
+     add_runscript scriptname
+         Adds a runtime hook to the image, which is a busybox ash compatible shell script. The name
+         of the script is guaranteed to match the name of the hook the script is called from.
+
+     add_udev_rule rule-file
+         Adds  a udev rule to the image. Dependencies on binaries will be discovered and added. The
+         argument can be a rule file name (discovered from well known udev paths)  or  an  absolute
+         path.
+
+     add_all_modules_from_symbol symbol paths
+         Adds modules from the paths directories containing the symbol to the image.
+
+     add_checked_modules_from_symbol symbol paths
+         Similar  to add_all_modules_from_symbol with the constraint that only modules matching the
+         whitelist generated by the autodetect hook will be added to the image. If  the  autodetect
+         hook  is not present in the image, this function is identical to add_all_modules_from_sym‐
+         bol.
+
+     add_initcpio_binary binary [ destination ] [ mode ]
+         Similar to add_binary except it will look into /usr/lib/initcpio for the binary to include
+         into the image. This is useful for hooks that have  files  inside  the  directory  without
+         hardcoding the path.
+
+ABOUT EARLY CPIO
+     mkinitcpio  has  support for early CPIO. These are uncompressed CPIO archives prepended to the
+     main compressed CPIO archive. They are used for early loading CPU microcode  or  loading  ACPI
+     table overrides.
+
+     Install hooks can install files to this archive by adding them to $EARLYROOT.
+
+ABOUT RUNTIME HOOKS
+     Runtime  hooks added to the image via the add_runscript function from an install hook are able
+     to provide extra functionality during early userspace. Specific functions in these files  will
+     run  at different times. A hook can define one or more of these. At each hook point, hooks are
+     run in the order that they are defined in the HOOKS variable, except for cleanup  hooks  which
+     are run in reverse.
+
+     run_earlyhook
+         Functions of this name will be run once the API mounts have been setup and the kernel com‐
+         mand  line has been parsed. Daemons needed for early userspace should be started from this
+         hook point.
+
+     run_hook
+         Functions of this name will be run after any early hooks, and after user  defined  modules
+         have  been  installed. This is the most common hook point, and functionality such as scan‐
+         ning for LVM volumes and mapping encrypted volumes should be performed here.
+
+     run_latehook
+         Functions of this name will be run after root has been mounted. This is generally used for
+         further necessary setup in the real root, such as mounting other system partitions.
+
+     run_cleanuphook
+         Functions of this name are run as late as possible. Any daemons started from a  run_early‐
+         hook function should be shut down here in preparation for switching to the real root.
+
+     run_emergencyhook
+         Functions  of  this name are run before the emergency shell launched in case of boot fail‐
+         ure. For example this allows boot splash screens to terminate their process, so users will
+         notice the failure.
+
+     getarg argument [ default ]
+         This function can be used in runtime hooks to get an argument from the kernel cmdline.  If
+         argument exists with a value, the value is returned. If argument exists without a value, y
+         is returned. If argument does not exist, default is returned. If default is not specified,
+         nothing is returned.
+
+ABOUT POST HOOKS
+     Post  hooks  are executables or scripts executed after successful image generation for further
+     processing, like signing. When kernel-install(8) invokes mkinitcpio, post hooks are disabled.
+
+     They receive the kernel as the first argument, the image as second and optionally the  unified
+     kernel image as a third.
+
+     Note:  If  mkinitcpio is invoked with -k none or -k version and the kernel image is not found,
+     the first argument will be empty.
+
+     The following environment variables are passed:
+
+     KERNELVERSION
+         Contains the full version of the kernel the image has been built from.
+
+     KERNELDESTINATION
+         The default location where the kernel should be located for booting. This usually  is  the
+         same  as  the  first  argument but might differ if mkinitcpio has not been invoked with -k
+         /boot/*. If no kernel image has been found this variable will be empty as well.
+
+EARLY INIT ENVIRONMENT
+     mkinitcpio gives special treatment to certain environment variables passed on the kernel  com‐
+     mand line:
+
+     break[=<premount|postmount>]
+         If specified, mkinitcpio will start a shell during early init. The optional parameter con‐
+         trols  when  this  occurs:  when premount or no parameter are specified, the shell will be
+         launched prior to mounting root. If postmount is specified, the shell will be launched af‐
+         ter mounting root.
+
+     disablehooks=hooklist
+         This is a comma separated list of hooks which will be skipped during early init.
+
+     earlymodules=modulelist
+         This is a comma separated list of modules which will be loaded prior to any  others.  This
+         is generally not needed, and usually points to a configuration or kernel problem.
+
+     quiet
+         Causes mkinitcpio to output fewer messages during boot. Errors will not be suppressed.
+
+     ro
+         Specifies  that  root should be mounted with readonly permissions. This is the default be‐
+         havior.
+
+     rw
+         Specifies that root should be mounted with readwrite permissions. This is  generally  only
+         useful if your initramfs uses the fsck hook.
+
+     root=rootdevice
+         This variable describes the root partition which early init will mount before passing con‐
+         trol  to  the  real  init.  mkinitcpio understands a variety of formats, the most basic of
+         which is the path to the block device, either directly such as /dev/sda2, or using a  udev
+         symlink such as /dev/disk/by-label/CorsairF80-root. Support for identification by LABEL or
+         UUID  tags are also supported, such as, LABEL=CorsairF80-root. As of util-linux 2.22, PAR‐
+         TUUID and PARTLABEL are also supported. Identification via hex encoded major/minor  device
+         ID is supported for legacy reasons, but should be avoided as it tends to be fragile.
+
+     rootdelay[=seconds]
+         Sets the delay, in seconds, that mkinitcpio is willing to wait for the root device to show
+         up, if it is not available immediately. This defaults to 10 seconds. If an invalid integer
+         is passed, this variable will have no effect.
+
+     rootflags=flaglist
+         A comma-separated list of flags which will be passed onto the mount(8) command when mount‐
+         ing the root file system. Acceptable values are file system specific.
+
+     rootfstype=fstype
+         Overrides  the  type  of  file  system  being mounted as root. This should almost never be
+         needed as mount(8) usually detects this on its own.
+
+     rd.debug
+         Enables shell debug (xtrace). If rd.log is not also a  parameter  on  the  kernel  command
+         line, this parameter implies rd.log=console.
+
+     rd.log[=<console|file|kmsg|all>]
+         Enables  logging  of  early  userspace  messages. If specified, the optional parameter de‐
+         scribes where this information is logged. Multiple options can be OR-d together using  the
+         pipe  (|)  character. Messages are always logged to the console unless the quiet parameter
+         is passed. If the optional parameter is not specified, kmsg|console is assumed. If  rd.log
+         is not present on the kernel command line, no logging will take place.
+
+         console
+             Writes output to /dev/console.
+
+         file
+             Writes output to /run/initramfs/init.log.
+
+         kmsg
+             Writes  output  to  the  /dev/kmsg  device (introduced in Linux 3.5). This option is a
+             no-op if your kernel lacks support for /dev/kmsg.
+
+         all
+             Writes output to all known log targets.
+
+     These are only the variables that the core of mkinitcpio honor. Additional hooks may look  for
+     other environment variables and should be documented by the help output for the hook.
+
+REPRODUCIBILITY
+     mkinitcpio aims to create reproducible initramfs images by default.
+
+     This  means that two subsequent runs of mkinitcpio should produce two files that are identical
+     at the binary level.
+
+     Timestamps within the initramfs are set to the Unix epoch of 1970-01-01.
+
+     Note that in order for the build to be fully  reproducible,  the  compressor  specified  (e.g.
+     gzip,  xz) must also produce reproducible archives. At the time of writing, as an inexhaustive
+     example, the lzop compressor is incapable of producing reproducible archives due to the inser‐
+     tion of a runtime timestamp.
+
+     More information can be found at https://reproducible-builds.org.
+
+FILES
+     /etc/mkinitcpio.conf
+         Default configuration file for mkinitcpio.
+
+     /etc/mkinitcpio.conf.d
+         Directory containing drop-in configuration files.
+
+     /etc/mkinitcpio.d
+         Directory containing mkinitcpio presets.
+
+     /etc/initcpio/install, /usr/lib/initcpio/install
+         Search path for build time hooks.
+
+     /etc/initcpio/hooks, /usr/lib/initcpio/hooks
+         Search path for early userspace runtime hooks.
+
+     /etc/initcpio/post, /usr/lib/initcpio/post
+         Search path for post generation hooks.
+
+EXAMPLES
+     mkinitcpio
+         Perform a dry-run. This will generate an initial ramdisk but will not write anything.  Use
+         -g to create the real image.
+
+     mkinitcpio -p linux
+         Create an initial ramdisk based on the linux preset.
+
+     mkinitcpio -g /boot/initramfs-linux.img -k /boot/vmlinuz-linux
+         Create  an initial ramdisk for the kernel at /boot/vmlinuz-linux. The resulting image will
+         be written to /boot/initramfs-linux.img.
+
+     mkinitcpio -U /efi/EFI/Linux/systemd-linux.efi
+         Create an initial ramdisk for the kernel along with a unified kernel image. The  resulting
+         executable will be written to /efi/EFI/Linux/systemd-linux.efi.
+
+     mkinitcpio       -U       /efi/EFI/Linux/systemd-linux.efi       --splash      /usr/share/sys‐
+     temd/bootctl/splash-arch.bmp
+         Create an initial ramdisk for the kernel and a unified kernel image. This also includes  a
+         splash image which will be used during boot.
+
+SEE ALSO
+     A more thorough article on configuring mkinitcpio: https://wiki.archlinux.org/title/mkinitcpio
+
+     initrd(4), lsinitcpio(1), mkinitcpio.conf(5), bootparam(7)
+
+BUGS
+     Upon   writing   this   man  page,  there  were  no  noticeable  bugs  present.  Please  visit
+     https://gitlab.archlinux.org/archlinux/mkinitcpio/mkinitcpio/-/issues for an up to date list.
+
+AUTHORS
+     mkinitcpio is maintained by the Arch Linux community. Refer to the AUTHORS  file  for  a  full
+     list of contributors.
+
+COPYRIGHT
+     Copyright 🄯 mkinitcpio contributors. GPL-2.0-only.
+
+mkinitcpio 41.1                              2026-08-11                               MKINITCPIO(8)
