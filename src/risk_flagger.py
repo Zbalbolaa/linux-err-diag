@@ -1,4 +1,4 @@
-"""Capability 4 - Flag risky commands (no LLM, pure rules).
+"""Capability 4 - Flag risky commands (no LLM, pure rules). v2 (Lab 9): systemctl flags, pacman cache .part files.
 
 flag("sudo rm -rf /var/lib/pacman")
  -> {"verdict": "risky", "reasons": [...], "requires_confirmation": True}
@@ -10,7 +10,7 @@ import shlex
 RULES = [
     ("rm_recursive_force", r"\brm\s+(-\w*r\w*f\w*|-\w*f\w*r\w*|(-r|-R|--recursive)\s+(-f|--force)|(-f|--force)\s+(-r|-R|--recursive))\b",
      "recursive forced deletion"),
-    ("rm_root_or_glob", r"\brm\b.*\s(/|/\*|~|\*|/(etc|usr|boot|var|home|lib)\S*)(\s|$)",
+    ("rm_root_or_glob", r"\brm\b.*\s(/|/\*|~|\*|/(etc|usr|boot|var(?!/cache/pacman/pkg/)|home|lib)\S*)(\s|$)",
      "deletion on a system path or wildcard"),
     ("dd_write", r"\bdd\b.*\bof=/dev/", "raw write to a block device"),
     ("mkfs", r"\bmkfs(\.\w+)?\b|\bmkswap\b", "formats a partition (data loss)"),
@@ -26,7 +26,7 @@ RULES = [
     ("curl_pipe_shell", r"\b(curl|wget)\b.*\|\s*(sudo\s+)?(ba|z)?sh\b", "pipes remote code into a shell"),
     ("fork_bomb", r":\(\)\s*\{\s*:\|:&\s*\};:", "fork bomb"),
     ("redirect_to_disk", r">\s*/dev/(sd|nvme|vd|mmcblk)", "overwrites a block device"),
-    ("disable_security", r"\b(setenforce\s+0|systemctl\s+(stop|disable|mask)\s+(apparmor|firewalld|nftables|ufw))\b",
+    ("disable_security", r"\b(setenforce\s+0|systemctl\s+(stop|disable|mask)(\s+--?[\w-]+)*\s+(apparmor|firewalld|nftables|ufw|iptables))\b",
      "disables a security control"),
     ("iptables_flush", r"\b(iptables\s+-F|nft\s+flush\s+ruleset)\b", "flushes all firewall rules"),
     ("sudoers_direct_edit", r"(>|>>|tee).*?/etc/sudoers\b|\b(nano|vim?|echo)\b.*\s/etc/sudoers\b", "edit sudoers without visudo"),
